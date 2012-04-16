@@ -101,7 +101,7 @@ change the current directory
   copy matching entries to the destination directory, or copy a single entry to the destination path, or throw an error
 ####`.rmrf(glob,cbNotFound)`
   remove matching files and recursively remove matching directories
-####`.mkdir(path) 
+####`.mkdir(path)`
   recursively create a directory`
   
 ###READ/WRITE OPERATIONS
