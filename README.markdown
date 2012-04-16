@@ -1,4 +1,4 @@
-cd.js - a method-chaining library for the HTML5 file system API
+cd.js v0.2 - a comfortable async method chaining wrapper library for the HTML5 File System API
 
 (c) 2012 Zoran Obradović, Ljudmila.org. GPL 3.0 applies.
 
@@ -54,72 +54,74 @@ cd.js - a method-chaining library for the HTML5 file system API
 ##CD Object interface:
 ### constructor
 ####`cd(path)`
-start a new fs method queue, change the current directory to cd
+Start a new fs method queue, change the current directory to `path`.
 
 ### PROPERTIES
 #### `.cwd`
-change the current directory
+The current directory
 
 ### GENERAL
 ####`.cd(path)`
-  change current directory
+Change the current directory
 ####`.up()`
   cd ..
 ####`.root()`
   cd /
-####`.echo(args)`
-  output args for debugging purposes. uses console.log by default, can be overriden at CD.echo.
+####`.echo(args...)`
+  Output `args...` for debugging purposes. uses console.log by default, can be overriden at `CD.echo`.
 ####`.pwd()`
-  echo the current directory
+  Echo the current directory.
 ####`.onerror(callback)`
-  define an error handler
+  Define an error handler.
   
 
 ###QUEUE
 ####`.then(cb,arg)` 
-  add a callback to the queue, with an optional argument
+  Add a callback to the queue, with an optional argument.
   
 ###DIRECTORY ITERATORS
 ####`.for(glob,cbFound,cbNotFound)`
-  call cbFound for each matching file entry, or cbNotFound if no match found
+  Call `cbFound` for each matching file entry, or cbNotFound if no match found.
 ####`.ls(glob,cbFound,cbNotFound)`
-  like for, but includes metadata (TODO: figure out if size can be added without actually reading the file, add URL)
+  Like `.for`, but includes metadata (TODO: add size(?) and URL).
 ####`.byType(glob,cbFile,cbDir,cbNotFound)`
-  like for, but allows separate callbacks
+  Like `.for`, but allows separate callbacks for files and directories.
 ####`.files(glob,cbFound,cbNotFound)`
-  like for, but only include files
+  Like `.for`, but only include files.
 ####`.directories(glob,cbFound,cbNotFound)` 
-  like for, but only include directories
+  Like `.for`, but only include directories.
 
 
 ###FILE OPERATIONS
 ####`.rm(glob,cbNotFound)`
-  remove matching files
+  Remove matching files
 ####`.mv(glob,dest,cbNotFound)`
-  move matching entries to the destination directory, or move a single entry to the destination path, or throw an error if neither is possible
+  Move matching entries to the destination directory, or move a single entry to the destination path, or throw an error if neither is possible.
 ####`.cp(glob,dest,cbNotFound)`
-  copy matching entries to the destination directory, or copy a single entry to the destination path, or throw an error
+  Copy matching entries to the destination directory, or copy a single entry to the destination path, or throw an error.
 ####`.rmrf(glob,cbNotFound)`
-  remove matching files and recursively remove matching directories
-####`.mkdir(path) 
-  recursively create a directory`
+  Remove matching files and recursively remove matching directories.
+####`.mkdir(path)`
+  Recursively create a directory.
   
 ###READ/WRITE OPERATIONS
 ####`.read(glob,cbFound,cbNotFound)`
-  read content of matching files
-####`.write(glob,content)`
-  write to matching files
-  content can be a string, a blob, TODO: file, image, callback
+  Read content of matching files.
+####`.write(path,content)`
+  Write a file.
+  `content` can be a string or, a blob. 
+  
+  TODO: Allow globs. Accept entry, file, image, callback
 ####`TODO .append(glob,content)`
-  append to matching files
-  content can be a string, a blob, file, image, callback
+  Append to matching files.
+  `content` can be a string, a blob, entry, file, image, callback.
 ####`TODO .truncate(glob,offset,content)`
-  truncate matching files, and append optional content
-  offset can be a number or a callback
-  content can be a string, a blob, file, image, callback
+  Truncate matching files, and append optional content.
+  `offset` can be a number or a callback.
+  `content` can be a string, a blob, file, image, callback.
 ####`TODO .writeAt(glob,offset,content)`
-  offset can be a number or a callback
-  content can be a string, a blob, file, image, callback
+  `offset` can be a number or a callback.
+  `content` can be a string, a blob, file, image, callback.
 
  
 
@@ -137,7 +139,7 @@ change the current directory
     function cb (done,arg) {...}
 
 ####`done`
-if it returns `true`, then the callback is responsible for advancing the queue by calling done()
+If the callback returns `true`, then it is responsible for advancing the queue by calling `done()`.
 
 TODO: if it returns false, the error handler is called and the queue cancelled (or not, see error handling)
 ####`arg`
@@ -155,7 +157,7 @@ The callback's context (i.e. `this`) will be the same CD object. any methods cal
 
 If the callback is a non-truthy value, it is ignored.
   
-TODO: if the callback is not a function, an error is thrown
+TODO: If the callback is not a function, an error is thrown.
   
 
 ###`glob`
