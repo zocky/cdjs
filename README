@@ -51,7 +51,7 @@ do lots of stuff:
 
 
 CONSTRUCTOR:
-cd(path) - start a new fs interaction, change the current directory to cd
+cd(path) - start a new fs method queue, change the current directory to cd
 
 PROPERTIES
 cwd: current directory
@@ -59,9 +59,9 @@ cwd: current directory
 GENERAL:
 .cd(path): 
   change current directory
-TODO .up():
+.up():
   cd ..
-TODO .root():
+.root():
   cd /
 .echo(args):
   output args for debugging purposes. uses console.log by default, can be overriden at CD.echo.
@@ -93,7 +93,7 @@ FILE OPERATIONS:
   remove matching files
 .mv(glob,dest,cbNotFound) 
   move matching entries to the destination directory, or move a single entry to the destination path, or throw an error if neither is possible
-TODO .cp(glob,dest,cbNotFound) 
+.cp(glob,dest,cbNotFound) 
   copy matching entries to the destination directory, or copy a single entry to the destination path, or throw an error
 .rmrf(glob,cbNotFound) 
   recursively remove matching directories
@@ -145,15 +145,17 @@ function cb (done,arg) {...}
   the callback's context (i.e. this) will be the same CD object. any methods called on it will be placed in the 
   queue and executed after cb exits. if the callback needs to make any async calls, it can return true
   and call done() manually when the async calls are complete.
+
+  if the callback is a non-truthy value, it is ignored
   
   TODO: if the callback is not a function, an error is thrown
-  TODO: if the callback is a non-truthy value, it is ignored
   
 
 glob: 
   EITHER, an absolute or a relative path from the current directory, possibly including wildcards (* and ?) in the
   last part (after the last slash),
-  TODO OR, a fileEntry object
+  OR, an entry object
+  OR, a an array of entry objects
   TODO OR, an array of either
   
   will throw an error if the directory (the path before the last slash) does not exist, or if the glob is misformed

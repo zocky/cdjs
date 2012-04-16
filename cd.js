@@ -61,8 +61,11 @@ Queue.prototype = {
 
 function CD (dir) {
   this._onerror = function(e) {
-    console.log(e);
+    for (var i in e) if (e[i] == e) { e=e[i]; break; }
+    console.trace();
+    console.log(e,arguments.callee.cd.lastPath);
   };
+  this._onerror.cd = this;
   this.queue = new Queue(this);
   this.cwd = CD.fs.root;
   this.counter = 0;
@@ -79,7 +82,9 @@ function CD (dir) {
 /*
   I N I T
 */
-
+CD.errors = {
+  
+},
 CD._onready = [];
 
 CD._init = function() {
@@ -115,12 +120,15 @@ CD.echo = function () {
 CD.splitPath = function(path,from) {
   from = from || '/';
   from = from && from.fullPath ? from.fullPath : from;
+  path = path.fullPath || path;
+  
   if (path[0]=='/') {
     from = '';
   }
   path = from+'/'+path;
   var p1 = path.split(/[/]+/);
   var p2 = [];
+  p2.file = p1.pop();
   while (p1.length) {
     var chunk = p1.shift();
     if (!chunk) continue;
@@ -131,10 +139,14 @@ CD.splitPath = function(path,from) {
     }
     p2.push(chunk);
   }
+  p2.dir = '/'+p2.join('/');
+
+  p2.push(p2.file);
+  p2.path = '/'+p2.join('/');
   return p2;
 }
 CD.normalize = function(path,from) {
-  return '/'+CD.splitPath(path,from).join('/');
+  return CD.splitPath(path,from).path
 }
 
 /*
@@ -147,6 +159,7 @@ CD.prototype = {
     Q U E U E   TODO: integrate Queue from above
   */
   then: function then (fn,data)   {
+    if (!fn) return;
     var cnt = this.counter ++;
     var me = this;
     //console.log('add',cnt);
@@ -154,7 +167,7 @@ CD.prototype = {
       //console.log('exec',cnt);
       var Q = me.queue._methods;
       me.queue._methods = [];
-      var done = function() {
+      var done = function(res) {
         setTimeout(function() {
           //console.log('done',cnt);
           if (Q!==null) {
@@ -165,53 +178,75 @@ CD.prototype = {
         },0)
       }
       var res = fn.apply(me,[done,data]);
-      if (res!==true) done()
+      if (res!==true) done();
     });
     
     return this;
   },
 
   /*
+    path helpers
+  */
+  splitPath: function (path,from) {
+    return CD.splitPath(path,from || this.cwd);
+  },
+  normalize: function (path,from) {
+    return CD.normalize(path,from || this.cwd);
+  },
+  /*
     FS helpers  
   */
-  _getFile: function(path,cb1,cb2) {
-    var me = this;
-    path = CD.normalize(path);
-    CD.fs.root.getFile(path,{},function(entry){
-      cb1.apply(me,[entry])
-    }, cb2 || me._onerror);
-  },
-  _getDir: function(path,cb1,cb2) {
-    var me = this;
-    path = CD.normalize(path);
-    CD.fs.root.getDirectory(path,{},function(entry){
-        cb1.apply(me,[entry])
-    }, cb2 || me._onerror);
-  },
   _getEntry: function(path,cb1,cb2) {
     var me = this;
-    path = CD.normalize(path);
+    path = this.normalize(path);
+    
     CD.fs.root.getDirectory(path,{},function(entry){
       cb1.apply(me,[entry])
     },function() {
       CD.fs.root.getFile(path,{},function(entry){
-        cb1.apply(me,[entry])
-      }, cb2 || me._onerror);
+         cb1.apply(me,[entry])
+      }, me._wrap(cb2 || me._onerror));
     });
+  },
+  _getFile: function(path,cb1,cb2) {
+    var me = this;
+    path = this.normalize(path);
+    me.lastPath = 'get file '+path;
+    CD.fs.root.getFile(path,{},function(entry){
+      cb1.apply(me,[entry])
+    }, me._wrap(cb2 || me._onerror));
+  },
+  _getDir: function(path,cb1,cb2) {
+    var me = this;
+    path = this.normalize(path);
+    me.lastPath = 'get dir '+path;
+    CD.fs.root.getDirectory(path,{},function(entry){
+      cb1.apply(me,[entry])
+    }, me._wrap(cb2 || me._onerror));
+  },
+  _getParent: function(path,cb1,cb2) {
+    var me = this;
+    path = this.splitPath(path);
+    me.lastPath = 'get parent '+path.dir;
+    CD.fs.root.getDirectory(path.dir,{},function(entry){
+        cb1.apply(me,[entry])
+    }, me._wrap(cb2 || me._onerror));
   },
   _createFile: function(path,cb1,cb2) {
     var me = this;
-    path = CD.normalize(path);
+    path = this.normalize(path);
+    me.lastPath = path;
     CD.fs.root.getFile(path,{create:true},function(entry){
         cb1.apply(me,[entry])
-    }, cb2 || me._onerror);
+    }, me._wrap(cb2 || me._onerror));
   },
   _createDir: function(path,cb1,cb2) {
     var me = this;
-    path = CD.normalize(path);
+    path = this.normalize(path);
+    me.lastPath = path;
     CD.fs.root.getDirectory(path,{create:true},function(entry){
       cb1.apply(me,[entry])
-    }, cb2 || me._onerror);
+    }, me._wrap(cb2 || me._onerror));
   },
 
   /*
@@ -229,15 +264,22 @@ CD.prototype = {
   cd: function cd(dir) {
     var me = this;
     this.then(function(done) {
-      me.cwd.getDirectory(dir, {}, function(dirEntry) {
-        me.cwd = dirEntry;
+      this._getDir(dir, function(dirEntry) {
+        this.cwd = dirEntry;
         done();
-      }, me._onerror);
+      });
       return true;
     });
     return this;
   },
-
+  up: function() {
+    this.cd('..');
+    return this;
+  },
+  root: function() {
+    this.cd('/');
+    return this;
+  },
   /*
     D I R E C T O R Y   I T E R A T O R S
   */
@@ -245,55 +287,59 @@ CD.prototype = {
 
   for: function for_(glob,cbFound,cbNotFound) {
     var me = this;
+    function loop(entries, done) {
+      //console.log('found',glob,entries);
+      if (!entries.length) {
+        me.then(cbNotFound);
+        done();
+        return true;
+      }
+      entries.sort(function(a,b) {
+        return a.name > b.name ? 1 : -1;              
+      });
+      for ( var i = 0; i<entries.length; i++) {
+        entry = entries[i];
+        if (entries.length == 1) entry.single = true;
+        entry.list = entries;
+        entry.index = i;
+        me.then(cbFound, entry);
+      }
+      done();
+      return true;
+    }
   
     this.then(function(done) {
+      //console.log('looking for',glob);
+      if (glob instanceof Array) return loop(glob,done);
 
-      var parts = CD.splitPath(glob,this.cwd);
-      var file = parts.pop();
-      var dir = '/'+parts.join('/');
-
+      var parts = this.splitPath(glob);
+      var dir = parts.dir;
+      var file = parts.file;
       if (dir.match(/[*?]/)) {
-        me._onerror();
-        return;
+        me._onerror('bad glob');
+        return true;
       }
 
       
       if (!file.match(/[*?]/)) {
-        this._getEntry(path,{},function(entry){
-          var list = [entry];
-          entry.index = 0;
-          entry.single = true;
-          entry.list = list;
-          me.then(cbFound,entry);
-          done();
+        //console.log('single',glob);
+        this._getEntry(glob,function(entry){
+          loop([entry],done);
         },function() {
-          me.then(cbNotFound);
-          done();
+          loop([],done);
         });
-        return;
+        return true;
       }
 
       var re = new RegExp('^'+file.replace(/[?]/g,'.').replace(/[*]/g,'.*')+'$');
       me._getDir(dir, function (dirEntry) {
-        var  entries = [];
+        var entries = [];
         var reader = dirEntry.createReader();
         (function readEntries (me) {
           reader.readEntries(function(results) {
             if (!results.length) {
-              if (!entries.length) {
-                me.then(cbNotFound);
-                done();
-                return;
-              }
-              entries.sort(function(a,b) {
-                return a.name > b.name ? 1 : -1;              
-              });
-              for ( var i = 0, entry; entry = entries[i]; i++) {
-                entry.list = entries;
-                entry.index = i;
-                me.then(cbFound, entry);
-              }
-              done();
+              //console.log('globbed',glob);
+              loop(entries,done);
             } else {
               for (var i = 0, e; e = results[i]; i++) if(e.name.match(re)) entries.push(e);
               readEntries(me);
@@ -310,7 +356,7 @@ CD.prototype = {
   ls: function ls(glob,cbFound,cbNotFound) {
     var me = this;
     this.echo('ls',glob||'*');
-    this.for(glob,function(done,f) {
+    this.for(glob||'*',function(done,f) {
       f.getMetadata(function(data) {
         me.echo(f.fullPath, data.modificationTime);
         f.metaData = data;
@@ -401,46 +447,80 @@ CD.prototype = {
     }
     me.then(function(done) {
       fnDone = done;
-      var pathArray = CD.splitPath(path,me.cwd);
+      var pathArray = me.splitPath(path);
       doMkdir(CD.fs.root,pathArray);
     });
     
     return this;
   },
-  rm: function rm(glob) {
+  rm: function rm(glob,cbNotFound) {
     var me = this;
     this.for(glob, function(done,file) {
       if (file.isFile) {
         file.remove(done, me._onerror);
         return true;
       }
-    })
+    },cbNotFound)
     return this;
   },
-  rmrf: function rm(glob) {
+  rmrf: function (glob,cbNotFound) {
     var me = this;
     this.for(glob, function(done,file) {
       file[ file.isFile ? 'remove' : 'removeRecursively' ] (done, me._onerror);
+    },cbNotFound)
+    return this;
+  },
+  _mvcpSingle: function (action,glob,dest,done,cbNotFound) {
+    var me = this;
+      console.log('mv',glob,me.cwd.fullPath);
+    this.for(glob, function(done,entry) {
+      console.log('mv',glob,me.cwd.fullPath);
+      if (!entry.single) {
+        this._onerror('destination not single');
+        return true;
+      }
+      var p = me.splitPath(dest);
+      this._getDir(p.dir, function (destEntry) {
+        console.log(action,destEntry.fullPath,p.file);
+        entry[action+'To'](destEntry,p.file,done,this._onerror);
+      });
+      return true;
+    },cbNotFound);
+  },
+  mv: function (glob,dest,cbNotFound) {
+    this.for(dest, function(done,destEntry) {
+      if (!destEntry.single) {
+        this._onerror();
+      }
+      if (destEntry.isDirectory) {
+        this.for(glob, function(entry,done) {
+          entry.moveTo(destEntry,null,done,this._onerror);
+        },cbNotFound);
+      } else {
+        this._mvcpSingle('move',glob,dest,done,cbNotFound);
+      };
+      return true;
+    }, function(done) {
+      this._mvcpSingle('move',glob,dest,done,cbNotFound);
+      return true;
     })
     return this;
   },
-
-  mv: function mv(glob,dest) {
-    this.byType(dest, function(dest) {
-      if (!dest.single) {
-        this._onerror();
-        return true;
+  cp: function (glob,dest,cbNotFound) {
+    this.for(dest, function(done,destEntry) {
+      if (!destEntry.single) {
+        this._onerror('cp - destination not single');
       }
-      this._getEntry(dest, function(destEntry) {
-        if (destEntry.isDirectory) {
-          this.for(glob, function(entry,done) {
-            entry.moveTo(destDir,null,done);
-            return true;
-          });
-        } else {
-          
-        };
-      });
+      if (destEntry.isDirectory) {
+        this.for(glob, function(entry,done) {
+          entry.copyTo(destEntry,null,done,this._onerror);
+        },,cbNotFound);
+      } else {
+        this._mvcpSingle('copy',glob,dest,done,cbNotFound);
+      };
+      return true;
+    }, function(done) {
+      this._mvcpSingle('copy',glob,dest,done,cbNotFound);
     })
     return this;
   },
@@ -463,6 +543,15 @@ CD.prototype = {
     });
     return this;
   },
+  throw: function(errorCode) {
+  },
+  _wrap: function(fn) {
+    var me = this;
+    return function() {
+      console.log('wrapped',arguments);
+      fn.apply(me,arguments);
+    }
+  }
 };
 
 
