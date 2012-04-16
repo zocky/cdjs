@@ -1,4 +1,4 @@
-cd.js v0.2 - a method-chaining library for the HTML5 file system API
+cd.js v0.2 - a comfortable async method chaining wrapper library for the HTML5 File System API
 
 (c) 2012 Zoran Obradović, Ljudmila.org. GPL 3.0 applies.
 
