@@ -82,9 +82,9 @@ GENERIC ITERATORS:
   like for, but includes metadata (TODO: figure out if size can be added without actually reading the file, add URL)
 .byType(glob,cbFile,cbDir,cbNotFound):
   like for, but allows separate callbacks
-TODO .files(glob,cbFound,cbNotFound): 
+.files(glob,cbFound,cbNotFound): 
   like for, but only include files
-TODO .directories(glob,cbFound,cbNotFound): 
+.directories(glob,cbFound,cbNotFound): 
   like for, but only include directories
 
 

@@ -373,35 +373,45 @@ CD.prototype = {
     this.for(glob,function(done,entry) {
       this.then(entry.isDirectory ? cbDir : cbFile, entry);
     },cbNotFound);
+    return this;
+  },
+  files: function(glob,cbFound,cbNotFound) {
+    var found = false;
+    this.for(glob,function(done,entry) {
+      if (entry.isFile) {
+        found = true;
+        this.then(cbFound, entry);
+      }
+      if (!found) this.then(cbNotFound);
+    },cbNotFound);
+  },
+  directories: function(glob,cbFound,cbNotFound) {
+    var found = false;
+    this.for(glob,function(done,entry) {
+      if (entry.isDirectory) {
+        found = true;
+        this.then(cbFound, entry);
+      }
+      if (!found) this.then(cbNotFound);
+    },cbNotFound);
   },
   
   /*
     R E A D   /   W R I T E
   */
-  read: function read (file,cbFound) {
-    var me = this;
-    var fnDone = null;
-    function doRead(fileEntry) {
-      fileEntry.file(function(file) {
+  read: function read (glob,cbFound,cbNotFound) {
+    this.for(glob, function(done,entry) {
+      if (!entry.isFile) return;
+      entry.file(function(file) {
         var reader = new FileReader();
         reader.onloadend = function(e) {
           me.then(cbFound,this.result);
-          fnDone();
-         };
-         reader.readAsText(file);
-      }, me._onerror);
-    }
-    if (typeof file =='string' ) {
-      this.then(function(done) {
-        fnDone = done;
-        me.cwd.getFile(file, {}, doRead, me._onerror);
-        return true;
+          done();
+        };
+        reader.readAsText(entry.file);
       });
-    } else {
-      this.then(function(done) {
-      });
-    }
-    return this;
+      return true;
+    }, cbNotFound);
   },  write: function write(filename,content,type) {
     var me = this;
     type = type || 'text/plain';
@@ -514,7 +524,7 @@ CD.prototype = {
       if (destEntry.isDirectory) {
         this.for(glob, function(entry,done) {
           entry.copyTo(destEntry,null,done,this._onerror);
-        },,cbNotFound);
+        },cbNotFound);
       } else {
         this._mvcpSingle('copy',glob,dest,done,cbNotFound);
       };
