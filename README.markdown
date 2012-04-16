@@ -15,14 +15,14 @@ cd.js v0.2 - a comfortable async method chaining wrapper library for the HTML5 F
       .read('bar.txt', function(done,res) { 
         this
         .echo(res)
-        .write('report.txt', 'bar.txt contains '+res 
+        .write('report.txt', 'bar.txt contains '+res);
       })
 
 ###to list a directory: 
 
       cd('/foo')
       .for('*',function(done,file) { 
-        this.echo(file.fullPath) 
+        this.echo(file.fullPath); 
       });
 
 ###to do lots of stuff:
@@ -81,9 +81,9 @@ Change the current directory
   
 ###DIRECTORY ITERATORS
 ####`.for(glob,cbFound,cbNotFound)`
-  Call `cbFound` for each matching file entry, or cbNotFound if no match found.
+  Call `cbFound` for each matching file entry, or `cbNotFound` if no match found.
 ####`.ls(glob,cbFound,cbNotFound)`
-  Like `.for`, but includes metadata (TODO: add size(?) and URL).
+  Like `.for`, but includes metadata in `arg.metadata`. For now, this is only includes `.modificationTime`. (TODO: add size(?) and URL).
 ####`.byType(glob,cbFile,cbDir,cbNotFound)`
   Like `.for`, but allows separate callbacks for files and directories.
 ####`.files(glob,cbFound,cbNotFound)`
