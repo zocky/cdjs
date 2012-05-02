@@ -400,6 +400,7 @@ CD.prototype = {
     R E A D   /   W R I T E
   */
   read: function read (glob,cbFound,cbNotFound) {
+    var me = this;
     this.for(glob, function(done,entry) {
       if (!entry.isFile) return;
       entry.file(function(file) {
@@ -408,7 +409,7 @@ CD.prototype = {
           me.then(cbFound,this.result);
           done();
         };
-        reader.readAsText(entry.file);
+        reader.readAsText(file);
       });
       return true;
     }, cbNotFound);
