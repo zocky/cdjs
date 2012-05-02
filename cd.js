@@ -395,24 +395,27 @@ CD.prototype = {
       if (!found) this.then(cbNotFound);
     },cbNotFound);
   },
-  
+
   /*
     R E A D   /   W R I T E
   */
   read: function read (glob,cbFound,cbNotFound) {
+    var me = this;
     this.for(glob, function(done,entry) {
       if (!entry.isFile) return;
       entry.file(function(file) {
         var reader = new FileReader();
         reader.onloadend = function(e) {
+          this.result.file = file;
           me.then(cbFound,this.result);
           done();
         };
-        reader.readAsText(entry.file);
+        reader.readAsText(file);
       });
       return true;
     }, cbNotFound);
-  },  write: function write(filename,content,type) {
+  },  
+  write: function write(filename,content,type) {
     var me = this;
     type = type || 'text/plain';
     this.then(function(done) {
