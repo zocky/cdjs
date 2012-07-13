@@ -25,7 +25,7 @@ cd.js v0.2 - a comfortable async method chaining wrapper library for the HTML5 F
         this.echo(file.fullPath); 
       });
 
-###to do lots of stuff:
+###to do lots of stuff, all in the expected order:
 
       var store = {}, total = 0, report = '';
       
@@ -55,6 +55,8 @@ cd.js v0.2 - a comfortable async method chaining wrapper library for the HTML5 F
 ### constructor
 ####`cd(path)`
 Start a new fs method queue, change the current directory to `path`.
+####`cd(function)`
+Execute the function when the file system becomes available.
 
 ### PROPERTIES
 #### `.cwd`
