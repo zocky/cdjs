@@ -433,9 +433,8 @@ CD.prototype = {
           if (content instanceof Blob) {
             fileWriter.write(content); 
           } else {
-            var bb = new (window.BlobBuilder || window.WebKitBlobBuilder) ();
-            bb.append(content);
-            fileWriter.write(bb.getBlob(type));
+            var blob = new Blob([content], {type: type});
+            fileWriter.write(blob);
           }
         }, me._onerror);
       }, me._onerror);
