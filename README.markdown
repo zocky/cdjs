@@ -2,14 +2,14 @@ cd.js v0.2 - a comfortable async method chaining wrapper library for the HTML5 F
 
 (c) 2012 Zoran Obradović, Ljudmila.org. GPL 3.0 applies.
 
-##EXAMPLES
+## EXAMPLES
 
-###to write a file: 
+### to write a file: 
 
       cd('foo/bar/myFiles')
       .write('myText.txt','My foobar is great.');
 
-###to read a file and then write to another file: 
+### to read a file and then write to another file: 
 
       cd('/foo')
       .read('bar.txt', function(done,res) { 
@@ -18,14 +18,14 @@ cd.js v0.2 - a comfortable async method chaining wrapper library for the HTML5 F
         .write('report.txt', 'bar.txt contains '+res);
       })
 
-###to list a directory: 
+### to list a directory: 
 
       cd('/foo')
       .for('*',function(done,file) { 
         this.echo(file.fullPath); 
       });
 
-###to do lots of stuff, all in the expected order:
+### to do lots of stuff, all in the expected order:
 
       var store = {}, total = 0, report = '';
       
@@ -51,7 +51,7 @@ cd.js v0.2 - a comfortable async method chaining wrapper library for the HTML5 F
       })
       .echo('all done');
 
-##CD Object interface:
+## CD Object interface:
 ### constructor
 ####`cd(path)`
 Start a new fs method queue, change the current directory to `path`.
@@ -63,71 +63,71 @@ Execute the function when the file system becomes available.
 The current directory
 
 ### GENERAL
-####`.cd(path)`
+#### `.cd(path)`
 Change the current directory
-####`.up()`
+#### `.up()`
   cd ..
-####`.root()`
+#### `.root()`
   cd /
-####`.echo(args...)`
+#### `.echo(args...)`
   Output `args...` for debugging purposes. uses console.log by default, can be overriden at `CD.echo`.
-####`.pwd()`
+#### `.pwd()`
   Echo the current directory.
-####`.onerror(callback)`
+#### `.onerror(callback)`
   Define an error handler.
   
 
-###QUEUE
-####`.then(cb,arg)` 
+### QUEUE
+#### `.then(cb,arg)` 
   Add a callback to the queue, with an optional argument.
   
-###DIRECTORY ITERATORS
-####`.for(glob,cbFound,cbNotFound)`
+### DIRECTORY ITERATORS
+#### `.for(glob,cbFound,cbNotFound)`
   Call `cbFound` for each matching file entry, or `cbNotFound` if no match found.
-####`.ls(glob,cbFound,cbNotFound)`
+#### `.ls(glob,cbFound,cbNotFound)`
   Like `.for`, but includes metadata in `arg.metadata`. For now, this is only includes `.modificationTime`. (TODO: add size(?) and URL).
-####`.byType(glob,cbFile,cbDir,cbNotFound)`
+#### `.byType(glob,cbFile,cbDir,cbNotFound)`
   Like `.for`, but allows separate callbacks for files and directories.
-####`.files(glob,cbFound,cbNotFound)`
+#### `.files(glob,cbFound,cbNotFound)`
   Like `.for`, but only include files.
-####`.directories(glob,cbFound,cbNotFound)` 
+#### `.directories(glob,cbFound,cbNotFound)` 
   Like `.for`, but only include directories.
 
 
-###FILE OPERATIONS
-####`.rm(glob,cbNotFound)`
+### FILE OPERATIONS
+#### `.rm(glob,cbNotFound)`
   Remove matching files
-####`.mv(glob,dest,cbNotFound)`
+#### `.mv(glob,dest,cbNotFound)`
   Move matching entries to the destination directory, or move a single entry to the destination path, or throw an error if neither is possible.
-####`.cp(glob,dest,cbNotFound)`
+#### `.cp(glob,dest,cbNotFound)`
   Copy matching entries to the destination directory, or copy a single entry to the destination path, or throw an error.
-####`.rmrf(glob,cbNotFound)`
+#### `.rmrf(glob,cbNotFound)`
   Remove matching files and recursively remove matching directories.
-####`.mkdir(path)`
+#### `.mkdir(path)`
   Recursively create a directory.
   
-###READ/WRITE OPERATIONS
-####`.read(glob,cbFound,cbNotFound)`
+### READ/WRITE OPERATIONS
+#### `.read(glob,cbFound,cbNotFound)`
   Read content of matching files.
-####`.write(path,content)`
+#### `.write(path,content)`
   Write a file.
   `content` can be a string or, a blob. 
   
   TODO: Allow globs. Accept entry, file, image, callback
-####`TODO .append(glob,content)`
+#### `TODO .append(glob,content)`
   Append to matching files.
   `content` can be a string, a blob, entry, file, image, callback.
-####`TODO .truncate(glob,offset,content)`
+#### `TODO .truncate(glob,offset,content)`
   Truncate matching files, and append optional content.
   `offset` can be a number or a callback.
   `content` can be a string, a blob, file, image, callback.
-####`TODO .writeAt(glob,offset,content)`
+#### `TODO .writeAt(glob,offset,content)`
   `offset` can be a number or a callback.
   `content` can be a string, a blob, file, image, callback.
 
  
 
-##OPTIONS
+## OPTIONS
 (must be defined _before_ including cd.js)
 
     cdOptions = {
@@ -135,16 +135,16 @@ Change the current directory
       dont: if true, the file system won't be requested automatically, it can be done later by calling CD.init()
     }
 
-##ARGUMENT TYPES
-###`callback`
+## ARGUMENT TYPES
+### `callback`
 
     function cb (done,arg) {...}
 
-####`done`
+#### `done`
 If the callback returns `true`, then it is responsible for advancing the queue by calling `done()`.
 
 TODO: if it returns false, the error handler is called and the queue cancelled (or not, see error handling)
-####`arg`
+#### `arg`
 Additional argument, if supplied. In `.for()` loops, this will be the `Entry` object, with the following 
 added properties:
 
@@ -162,7 +162,7 @@ If the callback is a non-truthy value, it is ignored.
 TODO: If the callback is not a function, an error is thrown.
   
 
-###`glob`
+### `glob`
 EITHER:
 
 * an absolute or a relative path from the current directory, possibly including wildcards (* and ?) in the last part (after the last slash), OR
